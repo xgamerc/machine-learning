@@ -106,22 +106,26 @@ void learn(Xor* model, Xor diff, float rate) {
   model->and_b -= rate*diff.and_b;
 }
 
-data_point* test_table = NOR_table;
 int main(void) {
   Xor model = rand_xor();
-  const long long s = seed(1);
+  const long long s = seed('Y');
   srand(s);
   const float eps = 1e-3;
   const float learning_rate = 1e-2;
   printf("----------------------BEFORE LEARNING----------------------\n");
   printf("\n");
   print_xor(&model);
+  // data_point* test_table = OR_table;
+  data_point* test_table = NOR_table;
+  // data_point* test_table = NAND_table;
+  // data_point* test_table = AND_table;
+  // data_point* test_table = XOR_table;
   float c = cost(model, test_table, entries_amount);
   printf("\n");
   test(model, test_table, entries_amount);
   printf("starting cost(w, b, p, d, s): %f\n", c);
   for (size_t t = 0; t < 1'000'000; t++) {
-    // wiggle around 9 parameters and see how that affects the cost
+    // wiggle around 9 parameters and reduce the cost in the most efficient way
     learn(
       &model, 
       finite_differences(&model, test_table, entries_amount, eps), 
@@ -137,12 +141,28 @@ int main(void) {
   printf("   final cost(w, b, p, d, s): %f\n", nc);
   
   printf("\n\n");
+  printf("      model output:\n");
   for (int i = 0; i < 2; i++) {
-    for (int j = 0; j < 2; j++) {
-      printf("%d, %d: %f\n",i, j, forward(model, i, j));
-      printf("  OR %d, %d: %f\n",i, j,  sigmoidf(model.or_w1*i + model.or_w2*j + model.or_b));
-      printf("NAND %d, %d: %f\n",i, j, sigmoidf(model.nand_w1*i + model.nand_w2*j + model.nand_b));
-      printf(" AND %d, %d: %f\n",i, j, sigmoidf(model.and_w1*i + model.and_w2*j + model.and_b));
+    for (int p = 0; p < 2; p++) {
+      printf("  %d, %d   = expected: %f | model: %f\n",i, p, test_table[i*2+p][2], forward(model, i, p));
+    }
+  }
+  printf("  OR neuron output:\n");
+  for (int i = 0; i < 2; i++) {
+    for (int p = 0; p < 2; p++) {
+      printf("  %d | %d  = expected: %f | neuron: %f\n",  i, p, test_table[i*2+p][2], sigmoidf(model.or_w1*i + model.or_w2*p + model.or_b));
+    }
+  }
+  printf("NAND neuron output:\n");
+  for (int i = 0; i < 2; i++) {
+    for (int p = 0; p < 2; p++) {
+      printf("~(%d & %d) = expected: %f | neuron: %f\n",  i, p, test_table[i*2+p][2], sigmoidf(model.nand_w1*i + model.nand_w2*p + model.nand_b));
+    }
+  }
+  printf(" AND neuron output:\n");
+  for (int i = 0; i < 2; i++) {
+    for (int p = 0; p < 2; p++) {
+      printf("  %d & %d  = expected: %f | neuron: %f\n",  i, p, test_table[i*2+p][2], sigmoidf(model.and_w1*i + model.and_w2*p + model.and_b));
     }
   }
   printf("\nseed: %lld\n",s);

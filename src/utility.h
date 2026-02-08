@@ -5,7 +5,7 @@
 
 float rand_float() { return (float)rand() / (float)RAND_MAX; }
 long long seed(char randomize = 0) {
-  if (randomize) return (time(0));
+  if (randomize > 0) return (time(0));
   /* for ML/src/gradients.cpp
     ! with 2600 tries & rate as 1e-2
     ! these seeds give a low cost of 5.13E-4
